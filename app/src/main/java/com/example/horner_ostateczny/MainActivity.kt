@@ -397,20 +397,7 @@ fun HornerTable(
 
     // Rysujemy tabelkę
     Column(modifier = modifier.padding(8.dp)) {
-        // Nagłówki kolumn (potęgi)
-        Row {
-            full.forEachIndexed { idx, _ ->
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .border(1.dp, Color.Black)
-                        .padding(4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("c${idx}")
-                }
-            }
-        }
+
         // Wiersz 1: współczynniki
         Row {
             full.forEach { coef ->
