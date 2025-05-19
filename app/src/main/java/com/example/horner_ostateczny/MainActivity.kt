@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -99,7 +100,12 @@ fun hornerMain() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(coefficientsList) { coefficient ->
-                BoxCoefficient(coefficient)
+                BoxCoefficient(
+                    classCoe = coefficient,
+                    onDelete = {
+                        coefficientsList.remove(coefficient)
+                    }
+                )
             }
         }
 
@@ -227,11 +233,13 @@ fun hornerCalculate(coefficientsList: List<Coefficient>, divider: Double): Pair<
         fullCoeffs[maxPower - coef.power] = coef.number
     }
 
+    if (fullCoeffs.isEmpty() || fullCoeffs.size < 2) return Pair(emptyList(), 0.0) // Ensure valid size
+
     val n = fullCoeffs.size
     val r = -divider
 
     val result = MutableList(n - 1) { 0.0 }
-    result[0] = fullCoeffs[0]
+    result[0] = fullCoeffs[0] // Safe access after checks
 
     for (i in 1 until n - 1) {
         result[i] = result[i - 1] * r + fullCoeffs[i]
@@ -239,7 +247,6 @@ fun hornerCalculate(coefficientsList: List<Coefficient>, divider: Double): Pair<
 
     val remainder = result.last() * r + fullCoeffs.last()
 
-    // Zmapuj współczynniki na obiekty Coefficient z odpowiednią potęgą
     val resultCoefficients = result.mapIndexed { index, value ->
         Coefficient(number = value, power = maxPower - 1 - index)
     }
@@ -322,7 +329,7 @@ fun formatPolynomialFromCoefficients(coefficients: List<Coefficient>): String {
 }
 
 @Composable
-fun BoxCoefficient(classCoe: Coefficient) {
+fun BoxCoefficient(classCoe: Coefficient, onDelete: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -339,26 +346,38 @@ fun BoxCoefficient(classCoe: Coefficient) {
             .shadow(4.dp, shape = RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
-        Column {
-            Text(
-                text = "Liczba: ${
-                    if (classCoe.number % 1 == 0.0) {
-                        classCoe.number.toInt()
-                    } else {
-                        classCoe.number
-                    }
-                }",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0D47A1)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column {
+                Text(
+                    text = "Liczba: ${
+                        if (classCoe.number % 1 == 0.0) {
+                            classCoe.number.toInt()
+                        } else {
+                            classCoe.number
+                        }
+                    }",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0D47A1)
+                    )
                 )
-            )
-            Text(
-                text = "Potęga: ${classCoe.power}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color(0xFF1565C0)
+                Text(
+                    text = "Potęga: ${classCoe.power}",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color(0xFF1565C0)
+                    )
                 )
-            )
+            }
+            Button(
+                onClick = onDelete,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+            ) {
+                Text("Usuń", color = Color.White)
+            }
         }
     }
 }
