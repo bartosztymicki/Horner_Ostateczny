@@ -1,7 +1,6 @@
 package com.example.horner_ostateczny
 
 import androidx.compose.foundation.lazy.items
-import android.health.connect.datatypes.units.Power
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -38,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.horner_ostateczny.ui.theme.Horner_OstatecznyTheme
 
 class MainActivity : ComponentActivity() {
@@ -51,6 +50,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 data class Coefficient(
     var number: Double,
     var power: Int
@@ -64,7 +64,7 @@ fun hornerMain() {
             Coefficient(.0, 3),
             Coefficient(-2.0, 2),
             Coefficient(1.0, 1),
-            Coefficient(-5.0,0)
+            Coefficient(-5.0, 0)
         )
     }
 
@@ -217,7 +217,6 @@ fun hornerMain() {
     }
 }
 
-
 fun hornerCalculate(coefficientsList: List<Coefficient>, divider: Double): Pair<List<Coefficient>, Double> {
     if (coefficientsList.isEmpty()) return Pair(emptyList(), 0.0)
 
@@ -247,7 +246,6 @@ fun hornerCalculate(coefficientsList: List<Coefficient>, divider: Double): Pair<
 
     return Pair(resultCoefficients, remainder)
 }
-
 
 @Composable
 fun ShowText(list: List<Coefficient>, x: Double) {
@@ -293,7 +291,6 @@ fun ShowText(list: List<Coefficient>, x: Double) {
     )
 }
 
-
 fun formatPolynomialFromCoefficients(coefficients: List<Coefficient>): String {
     val parts = mutableListOf<String>()
 
@@ -323,7 +320,6 @@ fun formatPolynomialFromCoefficients(coefficients: List<Coefficient>): String {
 
     return if (parts.isEmpty()) "0" else parts.joinToString(" ")
 }
-
 
 @Composable
 fun BoxCoefficient(classCoe: Coefficient) {
@@ -366,6 +362,7 @@ fun BoxCoefficient(classCoe: Coefficient) {
         }
     }
 }
+
 @Composable
 fun HornerTable(
     coefficients: List<Double>,
@@ -400,6 +397,15 @@ fun HornerTable(
 
         // Wiersz 1: współczynniki
         Row {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .border(1.dp, Color.Black)
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "Dzielnik", fontSize = 11.sp)
+            }
             full.forEach { coef ->
                 Box(
                     Modifier
@@ -414,6 +420,15 @@ fun HornerTable(
         }
         // Wiersz 2: mnożenia
         Row {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .border(1.dp, Color.Black)
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(if (r % 1.0 == 0.0) r.toInt().toString() else r.toString())
+            }
             mulRow.forEach { m ->
                 Box(
                     Modifier
@@ -429,13 +444,23 @@ fun HornerTable(
             }
         }
         // Separator
-        Spacer(Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .background(Color.Black)
+        Spacer(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color.Black)
         )
         // Wiersz 3: sumy / wyniki
         Row {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .border(1.dp, Color.Black)
+                    .padding(4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("")
+            }
             sumRow.forEach { s ->
                 Box(
                     Modifier
