@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.horner_ostateczny.ui.theme.Horner_OstatecznyTheme
+import androidx.compose.foundation.clickable
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,10 +70,12 @@ fun hornerMain() {
         )
     }
 
-    var showDz by remember { mutableStateOf(false) }
-    var showCoefficients by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var selectedCoefficient by remember { mutableStateOf<Coefficient?>(null) }
     var numberText by remember { mutableStateOf("") }
     var powerText by remember { mutableStateOf("") }
+    var showDz by remember { mutableStateOf(false) }
+    var showCoefficients by remember { mutableStateOf(false) }
     var dividerText by remember { mutableStateOf("") }
     var divider by remember { mutableStateOf(2.0) }
     var resultText by remember { mutableStateOf<String?>(null) }
@@ -104,6 +107,12 @@ fun hornerMain() {
                     classCoe = coefficient,
                     onDelete = {
                         coefficientsList.remove(coefficient)
+                    },
+                    onClick = { coeff ->
+                        selectedCoefficient = coeff
+                        numberText = coeff.number.toString()
+                        powerText = coeff.power.toString()
+                        showEditDialog = true
                     }
                 )
             }
@@ -111,7 +120,6 @@ fun hornerMain() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 🔽 TABELA HORNERA
         HornerTable(
             coefficients = coefficientsList
                 .sortedByDescending { it.power }
@@ -160,7 +168,6 @@ fun hornerMain() {
         }
     }
 
-    // Dialogi – bez zmian
     if (showCoefficients) {
         AlertDialog(
             onDismissRequest = { showCoefficients = false },
@@ -221,6 +228,43 @@ fun hornerMain() {
             }
         )
     }
+
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Edytuj składnik") },
+            text = {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    TextField(
+                        value = numberText,
+                        onValueChange = { numberText = it },
+                        label = { Text("Wpisz liczbę") }
+                    )
+                    TextField(
+                        value = powerText,
+                        onValueChange = { powerText = it },
+                        label = { Text("Podaj potęgę") }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val number = numberText.toDoubleOrNull()
+                    val power = powerText.toIntOrNull()
+
+                    if (number != null && power != null) {
+                        coefficientsList.remove(selectedCoefficient)
+                        coefficientsList.add(Coefficient(number, power))
+                        numberText = ""
+                        powerText = ""
+                        showEditDialog = false
+                    }
+                }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }
 
 fun hornerCalculate(coefficientsList: List<Coefficient>, divider: Double): Pair<List<Coefficient>, Double> {
@@ -233,13 +277,13 @@ fun hornerCalculate(coefficientsList: List<Coefficient>, divider: Double): Pair<
         fullCoeffs[maxPower - coef.power] = coef.number
     }
 
-    if (fullCoeffs.isEmpty() || fullCoeffs.size < 2) return Pair(emptyList(), 0.0) // Ensure valid size
+    if (fullCoeffs.isEmpty() || fullCoeffs.size < 2) return Pair(emptyList(), 0.0)
 
     val n = fullCoeffs.size
     val r = -divider
 
     val result = MutableList(n - 1) { 0.0 }
-    result[0] = fullCoeffs[0] // Safe access after checks
+    result[0] = fullCoeffs[0]
 
     for (i in 1 until n - 1) {
         result[i] = result[i - 1] * r + fullCoeffs[i]
@@ -329,7 +373,11 @@ fun formatPolynomialFromCoefficients(coefficients: List<Coefficient>): String {
 }
 
 @Composable
-fun BoxCoefficient(classCoe: Coefficient, onDelete: () -> Unit) {
+fun BoxCoefficient(
+    classCoe: Coefficient,
+    onDelete: () -> Unit,
+    onClick: (Coefficient) -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -345,6 +393,7 @@ fun BoxCoefficient(classCoe: Coefficient, onDelete: () -> Unit) {
             )
             .shadow(4.dp, shape = RoundedCornerShape(12.dp))
             .padding(16.dp)
+            .clickable { onClick(classCoe) }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -390,31 +439,21 @@ fun HornerTable(
 ) {
     if (coefficients.isEmpty()) return
 
-    // 1. Pełna lista współczynników od najwyższej potęgi
     val n = coefficients.size
     val full = coefficients
-
-    // 2. r = -divider (dla dzielenia przez x - a, gdzie a = divider)
     val r = -divider
 
-    // 3. Drugi wiersz (mnożenia)
     val mulRow = MutableList<Double?>(n) { null }
-    // 4. Trzeci wiersz (sumy / wyniki Hornera)
     val sumRow = MutableList<Double>(n) { 0.0 }
 
-    // Pierwszy element sumRow to pierwszy współczynnik
     sumRow[0] = full[0]
 
-    // Wypełniamy pozostałe
     for (i in 1 until n) {
         mulRow[i] = sumRow[i - 1] * r
         sumRow[i] = mulRow[i]!! + full[i]
     }
 
-    // Rysujemy tabelkę
     Column(modifier = modifier.padding(8.dp)) {
-
-        // Wiersz 1: współczynniki
         Row {
             Box(
                 Modifier
@@ -437,7 +476,6 @@ fun HornerTable(
                 }
             }
         }
-        // Wiersz 2: mnożenia
         Row {
             Box(
                 Modifier
@@ -462,14 +500,12 @@ fun HornerTable(
                 }
             }
         }
-        // Separator
         Spacer(
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(Color.Black)
         )
-        // Wiersz 3: sumy / wyniki
         Row {
             Box(
                 Modifier
