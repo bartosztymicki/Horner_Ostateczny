@@ -58,15 +58,7 @@ data class Coefficient(
 @Composable
 fun HornerMain() {
     val coefficientsList = remember {
-        mutableStateListOf(
-            Coefficient(59.0, 4),
-            Coefficient(3.0, 4),
-            Coefficient(3.0, 4),
-            Coefficient(.0, 3),
-            Coefficient(-2.0, 2),
-            Coefficient(1.0, 1),
-            Coefficient(-5.0, 0)
-        )
+        mutableStateListOf<Coefficient>()
     }
 
     var showTableAndText by remember { mutableStateOf(false) }
