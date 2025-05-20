@@ -39,6 +39,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.horner_ostateczny.ui.theme.Horner_OstatecznyTheme
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,7 +66,7 @@ data class Coefficient(
 fun hornerMain() {
     val coefficientsList = remember {
         mutableStateListOf(
-            Coefficient(5.0, 4),
+            Coefficient(59.0, 4),
             Coefficient(3.0, 4),
             Coefficient(3.0, 4),
             Coefficient(.0, 3),
@@ -90,10 +96,10 @@ fun hornerMain() {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
+
         ShowText(coefficientsList, divider)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyColumn(
             modifier = Modifier
@@ -125,8 +131,7 @@ fun hornerMain() {
             onClick = {
                 if (showDz == false)
                 showTableAndText = true
-                    if (showDz == true)
-                        showDz =false
+
                 if (showTableAndText)
                 if (coefficientsList.isNotEmpty()) {
                     val (quotient, remainder) = hornerCalculate(coefficientsList, divider)
@@ -164,8 +169,13 @@ fun hornerMain() {
                     .map { it.number },
                 divider = divider
             )
+            Button(onClick = {
+                showTableAndText = false
+                resultText = null // <-- to dodaj
+            }) {
+                Text("Zamknij")
+            }
         }
-        Spacer(modifier = Modifier.height(16.dp))
 
         if (resultText != null) {
             Text(
@@ -455,89 +465,105 @@ fun HornerTable(
     val sumRow = MutableList<Double>(n) { 0.0 }
 
     sumRow[0] = full[0]
-
     for (i in 1 until n) {
         mulRow[i] = sumRow[i - 1] * r
         sumRow[i] = mulRow[i]!! + full[i]
     }
 
-    Column(modifier = modifier.padding(8.dp)) {
-        Row {
+    Column(modifier = modifier.padding(4.dp)) {
+        // Nagłówki
+        Row(modifier = Modifier.fillMaxWidth()) {
             Box(
                 Modifier
                     .weight(1f)
                     .border(1.dp, Color.Black)
-                    .padding(4.dp),
+                    .padding(horizontal = 2.dp, vertical = 2.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "Dzielnik", fontSize = 11.sp)
+                Text(text = "Dzielnik", fontSize = 6.sp)
             }
             full.forEach { coef ->
                 Box(
                     Modifier
                         .weight(1f)
                         .border(1.dp, Color.Black)
-                        .padding(4.dp),
+                        .padding(horizontal = 2.dp, vertical = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(if (coef % 1.0 == 0.0) coef.toInt().toString() else coef.toString())
+                    Text(
+                        text = if (coef % 1.0 == 0.0) coef.toInt().toString() else coef.toString(),
+                        fontSize = 9.sp
+                    )
                 }
             }
         }
-        Row {
+
+        // Wiersz mnożenia
+        Row(modifier = Modifier.fillMaxWidth()) {
             Box(
                 Modifier
                     .weight(1f)
                     .border(1.dp, Color.Black)
-                    .padding(4.dp),
+                    .padding(horizontal = 2.dp, vertical = 2.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(if (r % 1.0 == 0.0) r.toInt().toString() else r.toString())
+                Text(
+                    text = if (r % 1.0 == 0.0) r.toInt().toString() else r.toString(),
+                    fontSize = 9.sp
+                )
             }
             mulRow.forEach { m ->
                 Box(
                     Modifier
                         .weight(1f)
                         .border(1.dp, Color.Black)
-                        .padding(4.dp),
+                        .padding(horizontal = 2.dp, vertical = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(m?.let {
-                        if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.2f", it)
-                    } ?: "")
+                    Text(
+                        text = m?.let {
+                            if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.2f", it)
+                        } ?: "",
+                        fontSize = 9.sp
+                    )
                 }
             }
         }
+
         Spacer(
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(Color.Black)
         )
-        Row {
+
+        // Wiersz sum
+        Row(modifier = Modifier.fillMaxWidth()) {
             Box(
                 Modifier
                     .weight(1f)
                     .border(1.dp, Color.Black)
-                    .padding(4.dp),
+                    .padding(horizontal = 2.dp, vertical = 2.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("")
+                Text("", fontSize = 9.sp)
             }
             sumRow.forEach { s ->
                 Box(
                     Modifier
                         .weight(1f)
                         .border(1.dp, Color.Black)
-                        .padding(4.dp),
+                        .padding(horizontal = 2.dp, vertical = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        if (s % 1.0 == 0.0) s.toInt().toString()
-                        else String.format("%.2f", s)
+                        text = if (s % 1.0 == 0.0) s.toInt().toString()
+                        else String.format("%.2f", s),
+                        fontSize = 9.sp
                     )
                 }
             }
         }
     }
 }
+
