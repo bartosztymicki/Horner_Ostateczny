@@ -4,7 +4,6 @@ import androidx.compose.foundation.lazy.items
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +43,6 @@ import androidx.compose.foundation.clickable
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             Horner_OstatecznyTheme {
                 hornerMain()
@@ -62,6 +60,8 @@ data class Coefficient(
 fun hornerMain() {
     val coefficientsList = remember {
         mutableStateListOf(
+            Coefficient(5.0, 4),
+            Coefficient(3.0, 4),
             Coefficient(3.0, 4),
             Coefficient(.0, 3),
             Coefficient(-2.0, 2),
@@ -70,6 +70,7 @@ fun hornerMain() {
         )
     }
 
+    var showTableAndText by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedCoefficient by remember { mutableStateOf<Coefficient?>(null) }
     var numberText by remember { mutableStateOf("") }
@@ -80,7 +81,6 @@ fun hornerMain() {
     var divider by remember { mutableStateOf(2.0) }
     var resultText by remember { mutableStateOf<String?>(null) }
 
-    val (hornerResult, remainder) = hornerCalculate(coefficientsList, divider)
 
     Column(
         modifier = Modifier
@@ -120,17 +120,14 @@ fun hornerMain() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        HornerTable(
-            coefficients = coefficientsList
-                .sortedByDescending { it.power }
-                .map { it.number },
-            divider = divider
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
+                if (showDz == false)
+                showTableAndText = true
+                    if (showDz == true)
+                        showDz =false
+                if (showTableAndText)
                 if (coefficientsList.isNotEmpty()) {
                     val (quotient, remainder) = hornerCalculate(coefficientsList, divider)
                     val quotientStr = formatPolynomialFromCoefficients(quotient)
@@ -158,6 +155,17 @@ fun hornerMain() {
                 Text("Dodaj dzielnik")
             }
         }
+
+
+        if (showTableAndText) {
+            HornerTable(
+                coefficients = coefficientsList
+                    .sortedByDescending { it.power }
+                    .map { it.number },
+                divider = divider
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
         if (resultText != null) {
             Text(
@@ -271,7 +279,7 @@ fun hornerCalculate(coefficientsList: List<Coefficient>, divider: Double): Pair<
     if (coefficientsList.isEmpty()) return Pair(emptyList(), 0.0)
 
     val maxPower = coefficientsList.maxOf { it.power }
-    val fullCoeffs = DoubleArray(maxPower + 1) { 0.0 }
+    val fullCoeffs = DoubleArray(maxPower +1) { 0.0 }
 
     for (coef in coefficientsList) {
         fullCoeffs[maxPower - coef.power] = coef.number
