@@ -69,7 +69,7 @@ fun HornerMain() {
     var showDz by remember { mutableStateOf(false) }
     var showCoefficients by remember { mutableStateOf(false) }
     var dividerText by remember { mutableStateOf("") }
-    var divider by remember { mutableStateOf(2.0) }
+    var divider by remember { mutableStateOf(1.0) }
     var resultText by remember { mutableStateOf<String?>(null) }
 
 
