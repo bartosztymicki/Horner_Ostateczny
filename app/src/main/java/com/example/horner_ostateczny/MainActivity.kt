@@ -1,3 +1,4 @@
+
 package com.example.horner_ostateczny
 
 import android.os.Bundle
@@ -120,10 +121,8 @@ fun HornerMain() {
                 if (showTableAndText)
                     if (coefficientsList.isNotEmpty()) {
                         val (quotient, remainder) = hornerCalculate(coefficientsList, divider)
-                        val quotientStr = formatPolynomialFromCoefficients(quotient)
                         val remainderStr = if (remainder % 1 == 0.0) remainder.toInt()
                             .toString() else remainder.toString()
-                        resultText = "Wynik:\nIloraz: $quotientStr\nReszta: $remainderStr"
                     } else {
                         resultText = "Brak współczynników do obliczenia"
                     }
@@ -157,7 +156,7 @@ fun HornerMain() {
             )
             Button(onClick = {
                 showTableAndText = false
-                resultText = null // <-- to dodaj
+                resultText = null
             }) {
                 Text("Zamknij")
             }
@@ -349,36 +348,6 @@ fun ShowText(list: List<Coefficient>, x: Double) {
     )
 }
 
-fun formatPolynomialFromCoefficients(coefficients: List<Coefficient>): String {
-    val parts = mutableListOf<String>()
-
-    for ((_, coef) in coefficients.sortedByDescending { it.power }.withIndex()) {
-        if (coef.number == 0.0) continue
-
-        val num = coef.number
-        val numStr = when {
-            num == 1.0 && coef.power != 0 -> ""
-            num == -1.0 && coef.power != 0 -> "-"
-            num % 1 == 0.0 -> num.toInt().toString()
-            else -> num.toString()
-        }
-
-        val part = when (coef.power) {
-            0 -> numStr
-            1 -> "${numStr}x"
-            else -> "${numStr}x^${coef.power}"
-        }
-
-        if (parts.isNotEmpty() && num > 0) {
-            parts.add("+ $part")
-        } else {
-            parts.add(part)
-        }
-    }
-
-    return if (parts.isEmpty()) "0" else parts.joinToString(" ")
-}
-
 @Composable
 fun BoxCoefficient(
     classCoe: Coefficient,
@@ -447,40 +416,42 @@ fun HornerTable(
     if (coefficients.isEmpty()) return
 
     val n = coefficients.size
-    val full = coefficients
     val r = -divider
 
     val mulRow = MutableList<Double?>(n) { null }
     val sumRow = MutableList<Double>(n) { 0.0 }
 
-    sumRow[0] = full[0]
+    // Start: pierwszy współczynnik kopiujemy bez zmian
+    sumRow[0] = coefficients[0]
+
+    // Horner: kolejno mnożymy i dodajemy współczynnik
     for (i in 1 until n) {
         mulRow[i] = sumRow[i - 1] * r
-        sumRow[i] = mulRow[i]!! + full[i]
+        sumRow[i] = mulRow[i]!! + coefficients[i]
     }
 
     Column(modifier = modifier.padding(4.dp)) {
-        // Nagłówki
+        // Nagłówki: Dzielnik i współczynniki
         Row(modifier = Modifier.fillMaxWidth()) {
             Box(
                 Modifier
                     .weight(1f)
                     .border(1.dp, Color.Black)
-                    .padding(horizontal = 2.dp, vertical = 2.dp),
+                    .padding(2.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "Dzielnik", fontSize = 6.sp)
+                Text(text = "Dzielnik", fontSize = 8.sp)
             }
-            full.forEach { coef ->
+            coefficients.forEach { coef ->
                 Box(
                     Modifier
                         .weight(1f)
                         .border(1.dp, Color.Black)
-                        .padding(horizontal = 2.dp, vertical = 2.dp),
+                        .padding(2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (coef % 1.0 == 0.0) coef.toInt().toString() else coef.toString(),
+                        text = if (coef % 1.0 == 0.0) coef.toInt().toString() else String.format("%.2f", coef),
                         fontSize = 9.sp
                     )
                 }
@@ -493,11 +464,11 @@ fun HornerTable(
                 Modifier
                     .weight(1f)
                     .border(1.dp, Color.Black)
-                    .padding(horizontal = 2.dp, vertical = 2.dp),
+                    .padding(2.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (r % 1.0 == 0.0) r.toInt().toString() else r.toString(),
+                    text = if (r % 1.0 == 0.0) r.toInt().toString() else String.format("%.2f", r),
                     fontSize = 9.sp
                 )
             }
@@ -506,15 +477,12 @@ fun HornerTable(
                     Modifier
                         .weight(1f)
                         .border(1.dp, Color.Black)
-                        .padding(horizontal = 2.dp, vertical = 2.dp),
+                        .padding(2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = m?.let {
-                            if (it % 1.0 == 0.0) it.toInt().toString() else String.format(
-                                "%.2f",
-                                it
-                            )
+                            if (it % 1.0 == 0.0) it.toInt().toString() else String.format("%.2f", it)
                         } ?: "",
                         fontSize = 9.sp
                     )
@@ -535,7 +503,7 @@ fun HornerTable(
                 Modifier
                     .weight(1f)
                     .border(1.dp, Color.Black)
-                    .padding(horizontal = 2.dp, vertical = 2.dp),
+                    .padding(2.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text("", fontSize = 9.sp)
@@ -545,17 +513,73 @@ fun HornerTable(
                     Modifier
                         .weight(1f)
                         .border(1.dp, Color.Black)
-                        .padding(horizontal = 2.dp, vertical = 2.dp),
+                        .padding(2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (s % 1.0 == 0.0) s.toInt().toString()
-                        else String.format("%.2f", s),
+                        text = if (s % 1.0 == 0.0) s.toInt().toString() else String.format("%.2f", s),
                         fontSize = 9.sp
                     )
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Wyliczenie wyniku w postaci wielomianu
+        val quotient = sumRow.dropLast(1)
+        val remainder = sumRow.last()
+        val degree = coefficients.size - 2
+
+        val resultPolynomial = buildString {
+            quotient.forEachIndexed { index, coef ->
+                if (coef == 0.0) return@forEachIndexed
+                val currentPower = degree - index
+                val absCoef = kotlin.math.abs(coef)
+                val formattedCoef = if (absCoef % 1.0 == 0.0) absCoef.toInt().toString() else String.format("%.2f", absCoef)
+
+                val sign = when {
+                    index == 0 -> if (coef < 0) "-" else ""
+                    coef > 0 -> " + "
+                    else -> " - "
+                }
+
+                val term = when (currentPower) {
+                    0 -> formattedCoef
+                    1 -> "${formattedCoef}x"
+                    else -> "${formattedCoef}x^$currentPower"
+                }
+
+                append(sign).append(term)
+            }
+        }
+
+        Text(
+            text = "Wielomian: $resultPolynomial",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Black
+        )
+
+        Text(
+            text = "Reszta: ${if (remainder % 1.0 == 0.0) remainder.toInt() else String.format("%.2f", remainder)}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Black
+        )
     }
 }
 
+
+fun prepareCoefficientsForHorner(coefficientsList: List<Coefficient>): List<Double> {
+    if (coefficientsList.isEmpty()) return emptyList()
+
+    // Grupujemy po potędze i sumujemy współczynniki
+    val grouped = coefficientsList.groupBy { it.power }
+        .mapValues { entry -> entry.value.sumOf { it.number } }
+
+    val maxPower = grouped.keys.maxOrNull() ?: 0
+
+    // Tworzymy listę od max potęgi do 0 z zerami tam gdzie brak składnika
+    return (maxPower downTo 0).map { power ->
+        grouped[power] ?: 0.0
+    }
+}
