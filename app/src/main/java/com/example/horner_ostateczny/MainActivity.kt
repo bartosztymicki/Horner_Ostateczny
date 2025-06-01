@@ -31,6 +31,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -87,7 +88,7 @@ fun HornerMain() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        ShowText(coefficientsListInput, divider)
+        ShowText(coefficientsList, divider)
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -98,11 +99,12 @@ fun HornerMain() {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(coefficientsListInput) { coefficient ->
+            items(coefficientsList) { coefficient ->
                 BoxCoefficient(
                     classCoe = coefficient,
                     onDelete = {
                         coefficientsListInput.remove(coefficient)
+                        calculateCoefficients(coefficientsListInput, coefficientsList)
                     },
                     onClick = { coeff ->
                         selectedCoefficient = coeff
@@ -153,7 +155,7 @@ fun HornerMain() {
 
         if (showTableAndText) {
             HornerTable(
-                coefficients = coefficientsListInput
+                coefficients = coefficientsList
                     .sortedByDescending { it.power }
                     .map { it.number },
                 divider = divider
@@ -201,12 +203,7 @@ fun HornerMain() {
                     if (number != null && power != null) {
                         coefficientsListInput.add(Coefficient(number, power))
                         coefficientsListInput.sortedByDescending { it.power }
-                        val maxPower = coefficientsListInput.maxOfOrNull { it.power } ?: 0
-                        val fullList = (maxPower downTo 0).map { power ->
-                            coefficientsListInput.find { it.power == power } ?: Coefficient(0.0, power)
-                        }
-                        coefficientsList.clear()
-                        coefficientsList.addAll(fullList)
+                        calculateCoefficients(coefficientsListInput, coefficientsList)
                         numberText = ""
                         powerText = ""
                         showCoefficients = false
@@ -269,6 +266,7 @@ fun HornerMain() {
                     if (number != null && power != null) {
                         coefficientsListInput.remove(selectedCoefficient)
                         coefficientsListInput.add(Coefficient(number, power))
+                        calculateCoefficients(coefficientsListInput, coefficientsList)
                         numberText = ""
                         powerText = ""
                         showEditDialog = false
@@ -279,6 +277,18 @@ fun HornerMain() {
             }
         )
     }
+}
+
+private fun calculateCoefficients(
+    coefficientsListInput: SnapshotStateList<Coefficient>,
+    coefficientsList: SnapshotStateList<Coefficient>
+) {
+    val maxPower = coefficientsListInput.maxOfOrNull { it.power } ?: 0
+    val fullList = (maxPower downTo 0).map { power ->
+        coefficientsListInput.find { it.power == power } ?: Coefficient(0.0, power)
+    }
+    coefficientsList.clear()
+    coefficientsList.addAll(fullList)
 }
 
 fun hornerCalculate(
