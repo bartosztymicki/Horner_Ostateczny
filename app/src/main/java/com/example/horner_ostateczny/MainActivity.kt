@@ -58,6 +58,10 @@ data class Coefficient(
 
 @Composable
 fun HornerMain() {
+    val coefficientsListInput = remember {
+        mutableStateListOf<Coefficient>()
+    }
+
     val coefficientsList = remember {
         mutableStateListOf<Coefficient>()
     }
@@ -83,7 +87,7 @@ fun HornerMain() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        ShowText(coefficientsList, divider)
+        ShowText(coefficientsListInput, divider)
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -94,11 +98,11 @@ fun HornerMain() {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(coefficientsList) { coefficient ->
+            items(coefficientsListInput) { coefficient ->
                 BoxCoefficient(
                     classCoe = coefficient,
                     onDelete = {
-                        coefficientsList.remove(coefficient)
+                        coefficientsListInput.remove(coefficient)
                     },
                     onClick = { coeff ->
                         selectedCoefficient = coeff
@@ -119,8 +123,8 @@ fun HornerMain() {
                     showTableAndText = true
 
                 if (showTableAndText)
-                    if (coefficientsList.isNotEmpty()) {
-                        val (quotient, remainder) = hornerCalculate(coefficientsList, divider)
+                    if (coefficientsListInput.isNotEmpty()) {
+                        val (quotient, remainder) = hornerCalculate(coefficientsListInput, divider)
                         val remainderStr = if (remainder % 1 == 0.0) remainder.toInt()
                             .toString() else remainder.toString()
                     } else {
@@ -149,7 +153,7 @@ fun HornerMain() {
 
         if (showTableAndText) {
             HornerTable(
-                coefficients = coefficientsList
+                coefficients = coefficientsListInput
                     .sortedByDescending { it.power }
                     .map { it.number },
                 divider = divider
@@ -195,7 +199,14 @@ fun HornerMain() {
                     val power = powerText.toIntOrNull()
 
                     if (number != null && power != null) {
-                        coefficientsList.add(Coefficient(number, power))
+                        coefficientsListInput.add(Coefficient(number, power))
+                        coefficientsListInput.sortedByDescending { it.power }
+                        val maxPower = coefficientsListInput.maxOfOrNull { it.power } ?: 0
+                        val fullList = (maxPower downTo 0).map { power ->
+                            coefficientsListInput.find { it.power == power } ?: Coefficient(0.0, power)
+                        }
+                        coefficientsList.clear()
+                        coefficientsList.addAll(fullList)
                         numberText = ""
                         powerText = ""
                         showCoefficients = false
@@ -256,8 +267,8 @@ fun HornerMain() {
                     val power = powerText.toIntOrNull()
 
                     if (number != null && power != null) {
-                        coefficientsList.remove(selectedCoefficient)
-                        coefficientsList.add(Coefficient(number, power))
+                        coefficientsListInput.remove(selectedCoefficient)
+                        coefficientsListInput.add(Coefficient(number, power))
                         numberText = ""
                         powerText = ""
                         showEditDialog = false
